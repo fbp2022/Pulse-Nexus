@@ -31,21 +31,32 @@ export default function SettingsScreen() {
           says can be traced back to a specific comparison on your data.
         </Text>
 
-        <Text style={styles.h2}>How &ldquo;Ask the web&rdquo; works</Text>
+        <Text style={styles.h2}>How the Coach chat works</Text>
         <Text style={styles.p}>
-          The Ask tab sends your question to Google&apos;s Gemini API along with the built-in Google
-          Search grounding tool. The model summarizes web results and returns clickable source
-          links. Like any generative AI, it can be wrong — please verify before relying on its
-          answers, especially for medical, legal, or financial questions.
+          The Coach tab is a multi-turn chat backed by Google&apos;s Gemini API. Each message is
+          sent to Gemini along with a deterministic plain-text summary of your current Pulse Nexus
+          metrics, the prior conversation, and the built-in Google Search grounding tool. The
+          coach is instructed not to give medical advice. Like any generative AI, it can be wrong —
+          verify before relying on its answers, especially for medical, legal, or financial
+          questions.
+        </Text>
+
+        <Text style={styles.h2}>How the Workouts list works</Text>
+        <Text style={styles.p}>
+          The Workouts tab pulls workout history in parallel from every connected source — Apple
+          Health, WHOOP, Fitbit, and Garmin — normalizes the fields into one shape, and shows them
+          newest-first with the source labeled on each card. You can filter by source and by time
+          window.
         </Text>
 
         <Text style={styles.h2}>Privacy</Text>
         <Text style={styles.p}>
-          Apple Health data is read on-device and is never sent to a server by this app. WHOOP,
-          Fitbit, and Garmin data are fetched directly from those vendors&apos; servers using OAuth
-          tokens stored in the iOS Keychain — Pulse Nexus has no backend of its own. The only data
-          that leaves your phone is the question you type into the Ask tab, which goes to
-          Google&apos;s Gemini API.
+          Apple Health data is read on-device. WHOOP, Fitbit, and Garmin data are fetched directly
+          from those vendors&apos; servers using OAuth tokens stored in the iOS Keychain — Pulse
+          Nexus has no backend of its own. The data that leaves your phone goes to Google&apos;s
+          Gemini API only when you use the Coach tab: your message, the prior chat turns, and a
+          compact plain-text summary of your current metrics (recovery, HRV, sleep, steps, etc.).
+          The Dashboard and Workouts tabs do not send anything off-device.
         </Text>
 
         <Text style={styles.h2}>Sources we can read</Text>

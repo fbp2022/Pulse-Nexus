@@ -13,7 +13,8 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="index" options={{ title: 'Pulse Nexus' }} />
-        <Stack.Screen name="ask" options={{ title: 'Ask the web' }} />
+        <Stack.Screen name="chat" options={{ title: 'Coach' }} />
+        <Stack.Screen name="workouts" options={{ title: 'Workouts' }} />
         <Stack.Screen name="connect" options={{ title: 'Connect devices' }} />
         <Stack.Screen name="settings" options={{ title: 'Settings' }} />
       </Stack>

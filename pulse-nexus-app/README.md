@@ -4,9 +4,12 @@
 
 An iPhone app that combines **Apple Health**, **WHOOP**, **Fitbit** (including
 the new Google-era Fitbits and Pixel Watch), and **Garmin** data into one view,
-summarizes it with a **rule-based (non-AI)** in-app assistant, and provides a
-separate **"Ask the web"** tab powered by **Google Gemini** with Google Search
-grounding (and a permanent "may contain inaccuracies" disclaimer).
+summarizes it with a **rule-based (non-AI)** dashboard, lists every workout from
+every source in one place, and offers a **Coach chat** tab — a multi-turn
+conversation backed by **Google Gemini** with Google Search grounding, fed the
+user's live metrics so it can answer questions like "why is my recovery low?"
+in context. The Coach tab carries a permanent "may contain inaccuracies"
+disclaimer.
 
 This project is set up so you can build, sign, and ship to the App Store
 **without owning a Mac** — everything runs in the cloud via Expo Application
@@ -150,18 +153,24 @@ visual layout of the dashboard render fine.
 pulse-nexus-app/
 ├── app/                        Expo Router screens
 │   ├── _layout.tsx             Root navigator
-│   ├── index.tsx               Dashboard (combined data + rule-based insights)
-│   ├── ask.tsx                 Web Q&A (Gemini + Google Search grounding)
+│   ├── index.tsx               Dashboard (unified data + rule-based insights)
+│   ├── chat.tsx                Coach chat (Gemini + Google Search grounding, data-aware)
+│   ├── workouts.tsx            Unified workout history across all four sources
 │   ├── connect.tsx             WHOOP / Fitbit / Garmin OAuth
 │   └── settings.tsx            About / privacy / sources
-├── components/                 Presentational components
+├── components/
+│   ├── DisclaimerBanner.tsx
+│   ├── InsightCard.tsx
+│   ├── MetricCard.tsx
+│   └── WorkoutCard.tsx
 ├── lib/
 │   ├── healthkit.ts            Apple Health reads (HealthKit)
 │   ├── whoop.ts                WHOOP OAuth + API
 │   ├── fitbit.ts               Fitbit Web API OAuth + reads
 │   ├── garmin.ts               Garmin Health API OAuth + reads
+│   ├── workouts.ts             Cross-source workout fetcher + unified Workout type
 │   ├── assistant.ts            Rule-based (no-AI) insight engine + cross-source unifier
-│   ├── gemini.ts               Gemini "Ask the web" client
+│   ├── gemini.ts               Gemini client: askWeb() + chatTurn() with health context
 │   └── storage.ts              Keychain-backed secret storage
 ├── app.json                    Expo config + HealthKit entitlement + Info.plist strings
 ├── eas.json                    EAS Build & Submit profiles
@@ -189,15 +198,28 @@ devices disagree by more than a threshold.
 
 Disagreement thresholds are visible in source (`disagreement()` in `lib/assistant.ts`).
 
-## Two assistants, two behaviors
+## The four tabs
 
-| Surface | How it works | Disclaimer? |
-|---|---|---|
-| Dashboard insights | Deterministic rules in `lib/assistant.ts`. No model. | No — logic is auditable in source. |
-| Ask the web | Gemini 2.0 Flash + Google Search grounding via `lib/gemini.ts`. | Yes — persistent banner. |
+| Tab | What it does | Engine | Disclaimer? |
+|---|---|---|---|
+| **Dashboard** | Unified metric cards + plain-English insights | Deterministic rules in `lib/assistant.ts` (no model) | No — logic is auditable |
+| **Coach (chat)** | Multi-turn chat that knows your current data and can search the web | Gemini 2.0 Flash + Google Search grounding, with a deterministic health-context system prompt built by `summarizeContext()` | Yes — persistent banner |
+| **Workouts** | Newest-first list of workouts merged from Apple Health, WHOOP, Fitbit, Garmin; filter by source and time window | `lib/workouts.ts` (no model) | No |
+| **Connect** | Sign in / out of WHOOP, Fitbit, Garmin | OAuth 2.0 + PKCE | No |
 
-If you want the dashboard to be AI-powered too, swap `generateInsights()` in
-`app/index.tsx` for a call to `askWeb()` and ensure the disclaimer banner shows.
+### How the Coach chat is grounded
+
+Each turn sent to Gemini includes:
+
+1. A system instruction framing the model as the Pulse Nexus coach and
+   forbidding medical advice.
+2. A compact, deterministic plain-text summary of the user's current
+   metrics, produced by `summarizeContext()` in `lib/gemini.ts`. This is
+   *not* an LLM summary — the strings come from the same rules as the
+   Dashboard.
+3. The prior conversation as alternating user/model turns.
+4. The Google Search grounding tool, so the model can cite live web
+   results.
 
 ---
 
