@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 
-const PREFIX = 'forgefit.';
+const PREFIX = 'pulsenexus.';
 
 export async function setSecret(key: string, value: string): Promise<void> {
   await SecureStore.setItemAsync(PREFIX + key, value, {

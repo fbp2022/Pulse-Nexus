@@ -1,4 +1,6 @@
-# Forge Fit — iPhone app
+# Pulse Nexus
+
+> Built by **Faith Based Innovations**
 
 An iPhone app that combines **Apple Health**, **WHOOP**, **Fitbit** (including
 the new Google-era Fitbits and Pixel Watch), and **Garmin** data into one view,
@@ -16,7 +18,7 @@ Services (EAS).
 
 | Item | Where | Cost | Approval |
 |---|---|---|---|
-| Apple Developer Program | https://developer.apple.com/programs/ | **$99/year** | Instant |
+| Apple Developer Program (organization or individual) | https://developer.apple.com/programs/ | **$99/year** | Instant |
 | Expo account | https://expo.dev/ | Free tier | Instant |
 | Google AI Studio key | https://aistudio.google.com/app/apikey | Free tier | Instant |
 | WHOOP developer app | https://developer.whoop.com/ | Free | Self-serve |
@@ -27,6 +29,11 @@ Services (EAS).
 
 You do **not** need: a Mac, Xcode, an Apple Silicon machine, or any local iOS
 build tools. Everything below works from Windows, Linux, ChromeOS, or an iPad.
+
+> Tip — when you enroll in the Apple Developer Program, enroll as the
+> organization **Faith Based Innovations** if you have (or are setting up) a
+> D-U-N-S number for it. That makes the App Store listing's "Seller" line read
+> "Faith Based Innovations" rather than your personal name.
 
 ### About the Garmin gate
 
@@ -46,7 +53,7 @@ Everything else works without paperwork.
 ## First-time setup
 
 ```bash
-cd forge-fit-app
+cd pulse-nexus-app
 npm install
 cp .env.example .env
 # Fill .env with your Gemini key + WHOOP / Fitbit / Garmin credentials.
@@ -61,20 +68,20 @@ eas login
 ### Register the iOS bundle id
 
 1. Sign in to https://developer.apple.com/account → **Certificates, Identifiers & Profiles** → **Identifiers** → **+**.
-2. Register an App ID with bundle id `com.faithbasedpilot.forgefit` (or change it in `app.json`).
+2. Register an App ID with bundle id `com.faithbasedinnovations.pulsenexus` (or change it in `app.json`).
 3. Enable the **HealthKit** capability on that App ID.
 4. In https://appstoreconnect.apple.com create a matching app record (fill the App Store Connect app id into `eas.json`).
 
 ### Register OAuth redirect URIs
 
 When you register each provider's developer app, set the redirect URI to the
-matching scheme below. They all use the `forgefit://` scheme.
+matching scheme below. They all use the `pulsenexus://` scheme.
 
 | Provider | Redirect URI |
 |---|---|
-| WHOOP | `forgefit://whoop-callback` |
-| Fitbit | `forgefit://fitbit-callback` |
-| Garmin | `forgefit://garmin-callback` |
+| WHOOP | `pulsenexus://whoop-callback` |
+| Fitbit | `pulsenexus://fitbit-callback` |
+| Garmin | `pulsenexus://garmin-callback` |
 
 ---
 
@@ -140,7 +147,7 @@ visual layout of the dashboard render fine.
 ## Project layout
 
 ```
-forge-fit-app/
+pulse-nexus-app/
 ├── app/                        Expo Router screens
 │   ├── _layout.tsx             Root navigator
 │   ├── index.tsx               Dashboard (combined data + rule-based insights)
@@ -200,3 +207,7 @@ If you want the dashboard to be AI-powered too, swap `generateInsights()` in
 - Gemini API: free tier covers normal personal use
 - WHOOP, Fitbit, Garmin developer access: free
 - EAS Build: free tier ~30 builds/month; ~$19/month if you outgrow it
+
+---
+
+© Faith Based Innovations. All rights reserved.

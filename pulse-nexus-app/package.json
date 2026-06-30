@@ -1,6 +1,9 @@
 {
-  "name": "forge-fit-app",
+  "name": "pulse-nexus-app",
   "version": "0.1.0",
+  "description": "Pulse Nexus — combines Apple Health, WHOOP, Fitbit, and Garmin data with a rule-based assistant and an optional Gemini web-Q&A tab.",
+  "author": "Faith Based Innovations",
+  "publisher": "Faith Based Innovations",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",

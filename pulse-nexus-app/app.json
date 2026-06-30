@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "Pulse Nexus",
+    "slug": "pulse-nexus-app",
+    "scheme": "pulsenexus",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "description": "Pulse Nexus combines Apple Health, WHOOP, Fitbit, and Garmin into one plain-English view, with an optional Gemini-powered web Q&A tab.",
+    "primaryColor": "#3ddc97",
+    "ios": {
+      "bundleIdentifier": "com.faithbasedinnovations.pulsenexus",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "Pulse Nexus reads your Apple Health data so it can summarize your activity, sleep, and recovery alongside WHOOP, Fitbit, and Garmin data.",
+        "NSHealthUpdateUsageDescription": "Pulse Nexus does not write to Apple Health by default; this is reserved for future features.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDisplayName": "Pulse Nexus"
+      },
+      "entitlements": {
+        "com.apple.developer.healthkit": true,
+        "com.apple.developer.healthkit.access": []
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "react-native-health",
+        {
+          "isClinicalDataEnabled": false,
+          "healthSharePermission": "Pulse Nexus reads your Apple Health data so it can summarize your activity, sleep, and recovery alongside WHOOP, Fitbit, and Garmin data.",
+          "healthUpdatePermission": "Pulse Nexus does not write to Apple Health by default; this is reserved for future features."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "publisher": "Faith Based Innovations",
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID_AFTER_FIRST_BUILD"
+      }
+    }
+  }
+}

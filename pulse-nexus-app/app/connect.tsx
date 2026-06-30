@@ -95,8 +95,8 @@ export default function ConnectScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.h1}>Connect your devices</Text>
         <Text style={styles.p}>
-          Connect any combination of the services below. Forge Fit will merge what it can read from
-          each and tell you in plain English when two devices disagree.
+          Connect any combination of the services below. Pulse Nexus will merge what it can read
+          from each and tell you in plain English when two devices disagree.
         </Text>
 
         {PROVIDERS.map((p) => {
@@ -152,7 +152,7 @@ export default function ConnectScreen() {
         <Text style={styles.h2}>Apple Health</Text>
         <Text style={styles.p}>
           Apple Health permissions are requested automatically on the dashboard. To change them,
-          open the iOS Settings app → Privacy & Security → Health → Forge Fit.
+          open the iOS Settings app → Privacy & Security → Health → Pulse Nexus.
         </Text>
       </ScrollView>
     </SafeAreaView>

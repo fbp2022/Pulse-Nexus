@@ -12,7 +12,7 @@ export default function RootLayout() {
           headerTintColor: '#f5f7fa',
         }}
       >
-        <Stack.Screen name="index" options={{ title: 'Forge Fit' }} />
+        <Stack.Screen name="index" options={{ title: 'Pulse Nexus' }} />
         <Stack.Screen name="ask" options={{ title: 'Ask the web' }} />
         <Stack.Screen name="connect" options={{ title: 'Connect devices' }} />
         <Stack.Screen name="settings" options={{ title: 'Settings' }} />

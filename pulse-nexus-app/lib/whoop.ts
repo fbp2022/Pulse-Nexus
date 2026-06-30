@@ -9,7 +9,7 @@
  *  - API base:      https://api.prod.whoop.com/developer/v1
  *
  * The redirect URI registered with WHOOP must be the app scheme:
- *   forgefit://whoop-callback
+ *   pulsenexus://whoop-callback
  */
 import * as AuthSession from 'expo-auth-session';
 import Constants from 'expo-constants';
@@ -45,7 +45,7 @@ const discovery: AuthSession.DiscoveryDocument = {
 export async function connectWhoop(): Promise<void> {
   const clientId = env('EXPO_PUBLIC_WHOOP_CLIENT_ID');
   const clientSecret = env('EXPO_PUBLIC_WHOOP_CLIENT_SECRET');
-  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'forgefit', path: 'whoop-callback' });
+  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'pulsenexus', path: 'whoop-callback' });
 
   const request = new AuthSession.AuthRequest({
     clientId,

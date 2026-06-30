@@ -12,7 +12,7 @@
  *   Token:     https://api.fitbit.com/oauth2/token
  *   API base:  https://api.fitbit.com
  *
- * Redirect URI registered with Fitbit: forgefit://fitbit-callback
+ * Redirect URI registered with Fitbit: pulsenexus://fitbit-callback
  *
  * Free for personal/dev use; rate-limited per app + per user.
  */
@@ -52,7 +52,7 @@ function env(name: string): string {
 export async function connectFitbit(): Promise<void> {
   const clientId = env('EXPO_PUBLIC_FITBIT_CLIENT_ID');
   const clientSecret = env('EXPO_PUBLIC_FITBIT_CLIENT_SECRET');
-  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'forgefit', path: 'fitbit-callback' });
+  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'pulsenexus', path: 'fitbit-callback' });
 
   const request = new AuthSession.AuthRequest({
     clientId,

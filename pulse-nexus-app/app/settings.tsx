@@ -4,12 +4,23 @@ import Constants from 'expo-constants';
 
 export default function SettingsScreen() {
   const version = Constants.expoConfig?.version ?? '—';
+  const publisher =
+    (Constants.expoConfig?.extra as Record<string, string> | undefined)?.publisher ??
+    'Faith Based Innovations';
   return (
     <SafeAreaView style={styles.root} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.h1}>About</Text>
         <View style={styles.row}>
-          <Text style={styles.label}>App version</Text>
+          <Text style={styles.label}>App</Text>
+          <Text style={styles.value}>Pulse Nexus</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Built by</Text>
+          <Text style={styles.value}>{publisher}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Version</Text>
           <Text style={styles.value}>{version}</Text>
         </View>
 
@@ -20,7 +31,7 @@ export default function SettingsScreen() {
           says can be traced back to a specific comparison on your data.
         </Text>
 
-        <Text style={styles.h2}>How "Ask the web" works</Text>
+        <Text style={styles.h2}>How &ldquo;Ask the web&rdquo; works</Text>
         <Text style={styles.p}>
           The Ask tab sends your question to Google&apos;s Gemini API along with the built-in Google
           Search grounding tool. The model summarizes web results and returns clickable source
@@ -32,7 +43,7 @@ export default function SettingsScreen() {
         <Text style={styles.p}>
           Apple Health data is read on-device and is never sent to a server by this app. WHOOP,
           Fitbit, and Garmin data are fetched directly from those vendors&apos; servers using OAuth
-          tokens stored in the iOS Keychain — Forge Fit has no backend of its own. The only data
+          tokens stored in the iOS Keychain — Pulse Nexus has no backend of its own. The only data
           that leaves your phone is the question you type into the Ask tab, which goes to
           Google&apos;s Gemini API.
         </Text>

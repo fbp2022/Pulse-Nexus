@@ -15,7 +15,7 @@
  *     current OAuth 2.0 flow as of 2024-2025 but you should confirm
  *     against the partner kit you receive).
  *
- * Redirect URI to register with Garmin: forgefit://garmin-callback
+ * Redirect URI to register with Garmin: pulsenexus://garmin-callback
  *
  * Docs: https://developer.garmin.com/gc-developer-program/health-api/
  */
@@ -53,7 +53,7 @@ function envRequired(name: string): string {
 export async function connectGarmin(): Promise<void> {
   const clientId = envRequired('EXPO_PUBLIC_GARMIN_CLIENT_ID');
   const clientSecret = envRequired('EXPO_PUBLIC_GARMIN_CLIENT_SECRET');
-  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'forgefit', path: 'garmin-callback' });
+  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'pulsenexus', path: 'garmin-callback' });
 
   const request = new AuthSession.AuthRequest({
     clientId,
