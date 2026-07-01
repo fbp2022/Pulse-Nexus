@@ -6,7 +6,7 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "description": "Pulse Nexus combines Apple Health, WHOOP, Fitbit, and Garmin into one plain-English view, with an optional Gemini-powered web Q&A tab.",
     "primaryColor": "#3ddc97",
     "ios": {
@@ -33,7 +33,9 @@
           "healthSharePermission": "Pulse Nexus reads your Apple Health data so it can summarize your activity, sleep, and recovery alongside WHOOP, Fitbit, and Garmin data.",
           "healthUpdatePermission": "Pulse Nexus does not write to Apple Health by default; this is reserved for future features."
         }
-      ]
+      ],
+      "expo-asset",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

@@ -97,7 +97,115 @@ Connect Garmin button returns an "approval required" error until you apply at
 
 ---
 
-## First-time setup
+## Start testing right now (fastest path to iPhone)
+
+The code, config, and cloud-build recipe are ready. Everything below runs on
+Linux, macOS, or Windows — no Xcode required. It gets you a signed `.ipa` on
+your iPhone via TestFlight (or ad-hoc install) that opens **Pulse Nexus** for
+the first time.
+
+### 0. One-time prerequisites (skip anything you already have)
+
+| Prerequisite | Where | Time |
+|---|---|---|
+| Node.js ≥ 20 | nodejs.org | 2 min |
+| Apple Developer Program membership | developer.apple.com/programs/ | Instant after payment ($99/yr) |
+| Expo account (free) | expo.dev | 1 min |
+| At least one AI provider key (Gemini free) | aistudio.google.com/app/apikey | 1 min |
+
+### 1. Install and preflight (Linux/macOS/Windows)
+
+```bash
+cd pulse-nexus-app
+npm install
+cp .env.example .env
+# Fill in .env — at minimum EXPO_PUBLIC_GEMINI_API_KEY.
+# WHOOP/Fitbit/Garmin client IDs can be blank on first run; those integrations
+# will just show "not configured" instead of connecting.
+
+npm run preflight
+# Runs `tsc --noEmit` + a full iOS Metro bundle. If this passes, EAS will
+# almost certainly build.
+```
+
+### 2. Log in to Expo and register the project
+
+```bash
+npm install -g eas-cli
+eas login
+eas init                              # fills in expo.extra.eas.projectId
+```
+
+If asked "create a new project on Expo?", say yes.
+
+### 3. Register the iOS bundle id in Apple's Developer portal
+
+In developer.apple.com/account → **Identifiers** → **+** → App IDs, register
+`com.faithbasedinnovations.pulsenexus` and **enable the HealthKit
+capability** on it. This takes ~30 seconds and only needs to happen once.
+
+### 4. Kick off the first cloud build
+
+```bash
+npm run build:ios:preview
+```
+
+EAS asks about credentials — pick **"Let EAS handle it"** for both the
+Distribution Certificate and Provisioning Profile. EAS generates them in
+your Apple account and uses them for the build.
+
+The build runs in Expo's cloud on macOS (~15 minutes). When it finishes, EAS
+prints a **build URL**. Open that URL from your iPhone's browser and tap
+**Install** — the ad-hoc IPA installs directly. Trust the developer profile
+under Settings → General → VPN & Device Management, then open **Pulse
+Nexus**.
+
+### 5. Or go straight to TestFlight
+
+```bash
+npm run build:ios:prod
+# Fill in eas.json → submit.production.ios with your Apple ID email, Team ID,
+# and App Store Connect app id (created at appstoreconnect.apple.com/apps → +)
+npm run submit:ios
+```
+
+TestFlight processes the build (~20 min) and you can install the app on any
+iPhone signed in to your Apple ID under the TestFlight app.
+
+### 6. First-launch checklist inside the app
+
+1. Home tab loads with rule-based insights (may say "not enough data yet").
+2. Grant Apple Health permissions when prompted.
+3. Settings → **Connect devices** → link WHOOP / Fitbit (Garmin only if you
+   have partner approval).
+4. Settings → **Preferences** → confirm your Coach engine is selected.
+5. Home / Sleep / Workouts → tap the share icon → **Ask ChatGPT** to hand a
+   snapshot to the ChatGPT app on your phone.
+
+### Troubleshooting
+
+- **`preflight` fails on typecheck** — run `npx tsc --noEmit` and read the
+  error. Post an issue if it's not obvious.
+- **`preflight` fails on bundle-check** — usually a missing peer dep. Run
+  `npx expo install --check` to see which package.
+- **EAS build fails on "Missing credentials"** — re-run `eas credentials`
+  and pick "Let EAS handle it" again.
+- **App crashes on launch with HealthKit error** — the bundle id in App
+  Store Connect must have HealthKit capability enabled (step 3 above).
+- **Coach chat says "no key configured"** — set at least one
+  `EXPO_PUBLIC_<provider>_API_KEY` in `.env` **before** running
+  `eas build`. Env vars are baked into the JS bundle at build time.
+
+### Optional: Cloud env vars instead of `.env`
+
+If you don't want secrets in your local `.env`, set them in the Expo
+dashboard: expo.dev → your project → **Configuration** →
+**Environment variables** → add each `EXPO_PUBLIC_*` value with visibility
+"Plain text (embedded in build)". EAS Build reads them automatically.
+
+---
+
+## First-time setup (deep dive)
 
 ```bash
 cd pulse-nexus-app
