@@ -73,30 +73,6 @@ of provider.
 
 ---
 
-## What you'll need (one-time)
-
-| Item | Where | Cost | Approval |
-|---|---|---|---|
-| Apple Developer Program (enroll as Faith Based Innovations) | developer.apple.com/programs/ | **$99/year** | Instant |
-| Expo account | expo.dev | Free tier | Instant |
-| ≥1 AI provider key | See above | Free (Gemini) → paid | Instant |
-| WHOOP developer app | developer.whoop.com | Free | Self-serve |
-| Fitbit developer app | dev.fitbit.com/apps/new | Free | Self-serve |
-| Garmin Health API | developerportal.garmin.com | Free | **Partner review** |
-| Node.js ≥ 20 on your computer | nodejs.org | Free | — |
-| Your iPhone | — | — | — |
-
-You do **not** need: a Mac, Xcode, an Apple Silicon machine, or any local iOS
-build tools.
-
-### About the Garmin gate
-
-Garmin's Health API is not self-serve. The app code is fully written, but the
-Connect Garmin button returns an "approval required" error until you apply at
-`developerportal.garmin.com` and paste the issued credentials into `.env`.
-
----
-
 ## First-time setup
 
 ```bash
