@@ -1,0 +1,172 @@
+openapi: 3.1.0
+info:
+  title: Pulse Nexus Connector
+  description: |
+    Pulse Nexus exposes the user's WHOOP, Fitbit, and Garmin data so ChatGPT
+    (via a Custom GPT) and other AI assistants can pull live values when the
+    user asks about their health, sleep, recovery, or workouts.
+
+    Apple Health data is on-device only and is not exposed by this connector.
+
+    The connector is a single-tenant backend: each deployment serves exactly
+    one user (the one whose refresh tokens are stored as Cloudflare Worker
+    secrets). For multi-user deployments you would replace the static
+    secrets with a KV-backed user table and add an OAuth dance.
+  version: "0.1.0"
+servers:
+  - url: https://pulse-nexus-connector.<your-worker-subdomain>.workers.dev
+    description: Replace with your deployed Cloudflare Worker URL.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+  schemas:
+    SourcedNumber:
+      type: object
+      properties:
+        value:
+          type: number
+        source:
+          type: string
+          enum: [WHOOP, Fitbit, Garmin]
+      required: [value, source]
+    Metrics:
+      type: object
+      description: Most recent unified values, chosen by per-metric source priority.
+      properties:
+        recovery:
+          $ref: "#/components/schemas/SourcedNumber"
+        restingHR:
+          $ref: "#/components/schemas/SourcedNumber"
+        hrvMs:
+          $ref: "#/components/schemas/SourcedNumber"
+        sleepHours:
+          $ref: "#/components/schemas/SourcedNumber"
+        strain:
+          $ref: "#/components/schemas/SourcedNumber"
+        steps:
+          $ref: "#/components/schemas/SourcedNumber"
+        activeKcal:
+          $ref: "#/components/schemas/SourcedNumber"
+        spo2:
+          $ref: "#/components/schemas/SourcedNumber"
+        bodyBattery:
+          type: number
+          description: Garmin Body Battery (0-100).
+        stressAvg:
+          type: number
+          description: Garmin average stress (0-100).
+    Stages:
+      type: object
+      properties:
+        deep:    { type: integer, description: "ms" }
+        rem:     { type: integer, description: "ms" }
+        light:   { type: integer, description: "ms" }
+        awake:   { type: integer, description: "ms" }
+      required: [deep, rem, light, awake]
+    SleepRow:
+      type: object
+      properties:
+        source:        { type: string, enum: [WHOOP, Fitbit, Garmin] }
+        start:         { type: string, format: date-time }
+        end:           { type: string, format: date-time }
+        asleepMs:      { type: integer }
+        inBedMs:       { type: integer }
+        efficiencyPct: { type: number, nullable: true }
+        scorePct:      { type: number, nullable: true }
+        stages:        { $ref: "#/components/schemas/Stages" }
+      required: [source, start, end, asleepMs, inBedMs, stages]
+    Workout:
+      type: object
+      properties:
+        source:      { type: string, enum: [WHOOP, Fitbit, Garmin] }
+        type:        { type: string }
+        start:       { type: string, format: date-time }
+        end:         { type: string, format: date-time }
+        durationMin: { type: number }
+        distanceKm:  { type: number }
+        calories:    { type: number }
+        avgHR:       { type: number }
+        maxHR:       { type: number }
+        strain:      { type: number, description: "WHOOP only, 0-21" }
+      required: [source, type, start, end, durationMin]
+security:
+  - bearerAuth: []
+paths:
+  /v1/health:
+    get:
+      operationId: getHealth
+      summary: Liveness check (no auth required)
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  service: { type: string }
+  /v1/snapshot:
+    get:
+      operationId: getSnapshot
+      summary: Get the user's most recent unified health metrics
+      description: |
+        Returns one value per metric across WHOOP / Fitbit / Garmin, chosen by
+        priority. Also returns the per-provider breakdown so the assistant can
+        report disagreements when relevant.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  asOf:        { type: string, format: date-time }
+                  metrics:     { $ref: "#/components/schemas/Metrics" }
+                  perProvider:
+                    type: object
+                    additionalProperties:
+                      $ref: "#/components/schemas/Metrics"
+  /v1/sleep:
+    get:
+      operationId: getLastNightSleep
+      summary: Get last night's sleep across providers
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  perSource:
+                    type: array
+                    items: { $ref: "#/components/schemas/SleepRow" }
+  /v1/workouts:
+    get:
+      operationId: getRecentWorkouts
+      summary: Get recent workouts merged across providers
+      parameters:
+        - in: query
+          name: days
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 90
+            default: 14
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workouts:
+                    type: array
+                    items: { $ref: "#/components/schemas/Workout" }

@@ -1,0 +1,35 @@
+name = "pulse-nexus-connector"
+main = "src/worker.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Secrets to set with `wrangler secret put <NAME>`:
+#
+#   API_KEY                     The bearer token your Custom GPT will send.
+#                               Generate something long and random.
+#                               (When you create the Custom GPT, paste this
+#                                value into Actions → Authentication → API Key.)
+#
+#   WHOOP_CLIENT_ID
+#   WHOOP_CLIENT_SECRET
+#   WHOOP_REFRESH_TOKEN         The 'offline' refresh token from your last
+#                               in-app WHOOP login.
+#
+#   FITBIT_CLIENT_ID
+#   FITBIT_CLIENT_SECRET
+#   FITBIT_REFRESH_TOKEN
+#
+#   GARMIN_CLIENT_ID            Optional — only set if you have Garmin
+#   GARMIN_CLIENT_SECRET        partner approval.
+#   GARMIN_REFRESH_TOKEN
+#
+# Apple Health data cannot be exposed here — it lives on-device.
+# The Custom GPT will only see WHOOP / Fitbit / Garmin data unless you
+# extend this worker to accept a "snapshot push" from the iPhone app.
+
+# Optional: persist refreshed tokens between requests so the worker
+# doesn't re-refresh on every call.
+# Create with: `wrangler kv namespace create TOKENS`
+# [[kv_namespaces]]
+# binding = "TOKENS"
+# id = "REPLACE_WITH_KV_NAMESPACE_ID"
