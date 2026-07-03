@@ -13,8 +13,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MetricCard } from '@/components/MetricCard';
 import { InsightCard } from '@/components/InsightCard';
+import { LiveHRCard } from '@/components/LiveHRCard';
 import { AskExternalAIButton } from '@/components/AskExternalAI';
 import { buildDashboardSnapshotText } from '@/lib/snapshot-text';
+import { getWhoopBle } from '@/lib/whoop-ble';
 import {
   getTodaySnapshot,
   requestHealthPermissions,
@@ -96,6 +98,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     load();
+    getWhoopBle()
+      .reconnect()
+      .catch(() => {});
   }, [load]);
 
   const onRefresh = useCallback(() => {
@@ -201,6 +206,8 @@ export default function Dashboard() {
                 getSnapshotText={() => buildDashboardSnapshotText(combined)}
               />
             </View>
+
+            <LiveHRCard />
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
             {rows.length === 0 ? (
