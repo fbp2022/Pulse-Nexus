@@ -1,124 +1,49 @@
 /**
- * WHOOP Developer API client.
+ * WHOOP integration.
  *
- * Docs: https://developer.whoop.com/
+ * Pulse Nexus talks to the WHOOP strap **directly over Bluetooth** — no WHOOP
+ * account, no WHOOP cloud, no subscription. See `lib/whoop-ble.ts` for the
+ * BLE client that owns scanning, pairing, and the live-HR stream.
  *
- * Auth flow: OAuth 2.0 Authorization Code with PKCE.
- *  - Authorize:     https://api.prod.whoop.com/oauth/oauth2/auth
- *  - Token:         https://api.prod.whoop.com/oauth/oauth2/token
- *  - API base:      https://api.prod.whoop.com/developer/v1
+ * This module used to sign in against WHOOP's Developer OAuth API. That
+ * codepath has been removed because it defeated the purpose of local-first:
+ * it required a WHOOP account and, in practice, a WHOOP subscription, since
+ * the developer API only returns data WHOOP's cloud has already ingested.
  *
- * The redirect URI registered with WHOOP must be the app scheme:
- *   pulsenexus://whoop-callback
+ * Stage 1 of the BLE work (this file's current state):
+ *  - `isWhoopConnected()` reflects whether the strap is BLE-paired.
+ *  - `connectWhoop()` is intentionally not the entry point any more —
+ *    pairing happens on the dedicated /whoop-connect scan screen, which
+ *    the Connect screen deep-links into.
+ *  - Live heart rate is streaming (public Bluetooth Heart Rate profile).
+ *  - Deeper metrics — recovery, HRV, strain, sleep — return `null` because
+ *    they need WHOOP's proprietary encrypted frames decoded on top of a
+ *    GATT bond. That's Stage 2 (see `lib/whoop-ble.ts` for the hooks).
+ *
+ * The type exports below (WhoopRecovery / WhoopSleep / WhoopCycle) keep
+ * their existing shape so the rest of the app (dashboard, chat, sleep,
+ * workouts) typechecks. Once Stage 2 lands, these will get filled in from
+ * decoded strap frames instead of returning null.
  */
-import * as AuthSession from 'expo-auth-session';
-import Constants from 'expo-constants';
-import { getSecret, setSecret, deleteSecret } from './storage';
+import { forgetWhoopStrap, getWhoopBle, isWhoopStrapPaired } from './whoop-ble';
 
-const AUTH_ENDPOINT = 'https://api.prod.whoop.com/oauth/oauth2/auth';
-const TOKEN_ENDPOINT = 'https://api.prod.whoop.com/oauth/oauth2/token';
-const API_BASE = 'https://api.prod.whoop.com/developer/v1';
+const NEEDS_BLE_PAIRING_MESSAGE =
+  'Pair your WHOOP strap over Bluetooth from Connect \u2192 WHOOP. Pulse Nexus no longer signs in to WHOOP\u2019s cloud.';
 
-const SCOPES = [
-  'read:recovery',
-  'read:cycles',
-  'read:sleep',
-  'read:workout',
-  'read:profile',
-  'read:body_measurement',
-  'offline',
-];
-
-function env(name: string): string {
-  const v =
-    (Constants.expoConfig?.extra as Record<string, string> | undefined)?.[name] ??
-    (process.env[name] as string | undefined);
-  if (!v) throw new Error(`Missing environment variable ${name}. See .env.example.`);
-  return v;
+export function isWhoopConfigured(): boolean {
+  return true;
 }
 
-const discovery: AuthSession.DiscoveryDocument = {
-  authorizationEndpoint: AUTH_ENDPOINT,
-  tokenEndpoint: TOKEN_ENDPOINT,
-};
-
-export async function connectWhoop(): Promise<void> {
-  const clientId = env('EXPO_PUBLIC_WHOOP_CLIENT_ID');
-  const clientSecret = env('EXPO_PUBLIC_WHOOP_CLIENT_SECRET');
-  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'pulsenexus', path: 'whoop-callback' });
-
-  const request = new AuthSession.AuthRequest({
-    clientId,
-    scopes: SCOPES,
-    redirectUri,
-    responseType: AuthSession.ResponseType.Code,
-    usePKCE: true,
-  });
-  await request.makeAuthUrlAsync(discovery);
-  const result = await request.promptAsync(discovery);
-  if (result.type !== 'success' || !result.params.code) {
-    throw new Error(`WHOOP authorization failed: ${result.type}`);
-  }
-
-  const token = await AuthSession.exchangeCodeAsync(
-    {
-      clientId,
-      clientSecret,
-      code: result.params.code,
-      redirectUri,
-      extraParams: { code_verifier: request.codeVerifier ?? '' },
-    },
-    discovery,
-  );
-
-  await setSecret('whoop.access_token', token.accessToken);
-  if (token.refreshToken) await setSecret('whoop.refresh_token', token.refreshToken);
-  if (token.expiresIn) {
-    const expiresAt = Date.now() + token.expiresIn * 1000;
-    await setSecret('whoop.expires_at', String(expiresAt));
-  }
+export async function connectWhoop(): Promise<never> {
+  throw new Error(NEEDS_BLE_PAIRING_MESSAGE);
 }
 
 export async function disconnectWhoop(): Promise<void> {
-  await deleteSecret('whoop.access_token');
-  await deleteSecret('whoop.refresh_token');
-  await deleteSecret('whoop.expires_at');
+  await forgetWhoopStrap();
 }
 
 export async function isWhoopConnected(): Promise<boolean> {
-  return (await getSecret('whoop.access_token')) !== null;
-}
-
-async function getValidAccessToken(): Promise<string> {
-  const access = await getSecret('whoop.access_token');
-  const expiresAtStr = await getSecret('whoop.expires_at');
-  const expiresAt = expiresAtStr ? Number(expiresAtStr) : 0;
-  if (access && expiresAt - 60_000 > Date.now()) return access;
-
-  const refresh = await getSecret('whoop.refresh_token');
-  if (!refresh) throw new Error('WHOOP not connected. Open the Connect tab to sign in.');
-
-  const clientId = env('EXPO_PUBLIC_WHOOP_CLIENT_ID');
-  const clientSecret = env('EXPO_PUBLIC_WHOOP_CLIENT_SECRET');
-  const refreshed = await AuthSession.refreshAsync(
-    { clientId, clientSecret, refreshToken: refresh, scopes: SCOPES },
-    discovery,
-  );
-  await setSecret('whoop.access_token', refreshed.accessToken);
-  if (refreshed.refreshToken) await setSecret('whoop.refresh_token', refreshed.refreshToken);
-  if (refreshed.expiresIn) {
-    await setSecret('whoop.expires_at', String(Date.now() + refreshed.expiresIn * 1000));
-  }
-  return refreshed.accessToken;
-}
-
-async function whoopGet<T>(path: string, query: Record<string, string> = {}): Promise<T> {
-  const token = await getValidAccessToken();
-  const url = new URL(API_BASE + path);
-  for (const [k, v] of Object.entries(query)) url.searchParams.set(k, v);
-  const res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${token}` } });
-  if (!res.ok) throw new Error(`WHOOP ${path} failed: ${res.status} ${await res.text()}`);
-  return (await res.json()) as T;
+  return isWhoopStrapPaired();
 }
 
 export type WhoopRecovery = {
@@ -126,6 +51,7 @@ export type WhoopRecovery = {
   score: { recovery_score: number; resting_heart_rate: number; hrv_rmssd_milli: number };
   updated_at: string;
 };
+
 export type WhoopSleep = {
   id: number;
   start: string;
@@ -137,6 +63,7 @@ export type WhoopSleep = {
     stage_summary: { total_in_bed_time_milli: number };
   };
 };
+
 export type WhoopCycle = {
   id: number;
   start: string;
@@ -144,15 +71,29 @@ export type WhoopCycle = {
   score: { strain: number; average_heart_rate: number };
 };
 
+/**
+ * Stage 2 will decode these from the strap's own frames. Until then, we
+ * report "no data" — the dashboard falls back to Apple Health / Fitbit /
+ * Garmin sources for these metrics, and the WHOOP live-HR card carries
+ * the "connected" experience by itself.
+ */
 export async function getLatestWhoopRecovery(): Promise<WhoopRecovery | null> {
-  const out = await whoopGet<{ records: WhoopRecovery[] }>('/recovery', { limit: '1' });
-  return out.records[0] ?? null;
+  return null;
 }
+
 export async function getLatestWhoopSleep(): Promise<WhoopSleep | null> {
-  const out = await whoopGet<{ records: WhoopSleep[] }>('/activity/sleep', { limit: '1' });
-  return out.records[0] ?? null;
+  return null;
 }
+
 export async function getLatestWhoopCycle(): Promise<WhoopCycle | null> {
-  const out = await whoopGet<{ records: WhoopCycle[] }>('/cycle', { limit: '1' });
-  return out.records[0] ?? null;
+  return null;
+}
+
+/**
+ * Live heart rate the strap is currently emitting, or null if nothing has
+ * arrived yet. Uses the same BLE singleton the /whoop-connect screen owns.
+ */
+export function getLatestWhoopLiveHR(): { bpm: number; timestamp: number } | null {
+  const last = getWhoopBle().getLastHR();
+  return last ? { bpm: last.bpm, timestamp: last.timestamp } : null;
 }
