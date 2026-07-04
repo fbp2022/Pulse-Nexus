@@ -368,6 +368,24 @@ export async function getLatestCycle(): Promise<WhoopCycleRow | null> {
   return row ? mapCycle(row) : null;
 }
 
+/** Newest cycle that actually carries a recovery score (skips e.g. Apple Health rows). */
+export async function getLatestCycleWithRecovery(): Promise<WhoopCycleRow | null> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<Record<string, number | string | null>>(
+    'SELECT * FROM whoop_cycle WHERE recovery_score IS NOT NULL ORDER BY start_ts DESC LIMIT 1',
+  );
+  return row ? mapCycle(row) : null;
+}
+
+/** Newest cycle that actually carries a strain value. */
+export async function getLatestCycleWithStrain(): Promise<WhoopCycleRow | null> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<Record<string, number | string | null>>(
+    'SELECT * FROM whoop_cycle WHERE strain IS NOT NULL ORDER BY start_ts DESC LIMIT 1',
+  );
+  return row ? mapCycle(row) : null;
+}
+
 export async function getLatestSleep(): Promise<WhoopSleepRow | null> {
   const db = await getDb();
   const row = await db.getFirstAsync<Record<string, number | string | null>>(

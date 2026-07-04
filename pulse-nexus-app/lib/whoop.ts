@@ -33,7 +33,8 @@ import {
 } from './whoop-analytics';
 import {
   getHistoryCounts,
-  getLatestCycle,
+  getLatestCycleWithRecovery,
+  getLatestCycleWithStrain,
   getLatestSleep,
   getRecentHrSamples,
   getRecentRrIntervals,
@@ -103,7 +104,7 @@ export type WhoopCycle = {
  * Fitbit / Garmin.
  */
 export async function getLatestWhoopRecovery(): Promise<WhoopRecovery | null> {
-  const cycle = await getLatestCycle();
+  const cycle = await getLatestCycleWithRecovery();
   if (!cycle || cycle.recoveryScore == null) return null;
   return {
     cycle_id: Number(cycle.startTs),
@@ -135,7 +136,7 @@ export async function getLatestWhoopSleep(): Promise<WhoopSleep | null> {
 }
 
 export async function getLatestWhoopCycle(): Promise<WhoopCycle | null> {
-  const cycle = await getLatestCycle();
+  const cycle = await getLatestCycleWithStrain();
   if (!cycle || cycle.strain == null) return null;
   return {
     id: Number(cycle.startTs),

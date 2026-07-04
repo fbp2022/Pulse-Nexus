@@ -21,6 +21,7 @@ import {
   type StrapConnectionState,
 } from '@/lib/whoop-ble';
 import { pickAndImportWhoopExport, type ImportResult } from '@/lib/whoop-import-file';
+import { importAppleHealthHistory } from '@/lib/apple-health-history';
 import { getHistoryCounts } from '@/lib/whoop-store';
 
 const colors = {
@@ -96,6 +97,8 @@ export default function WhoopConnectScreen() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [ahImporting, setAhImporting] = useState(false);
+  const [ahResult, setAhResult] = useState<string | null>(null);
   const scanCancelledRef = useRef(false);
 
   const refreshPaired = useCallback(async () => {
@@ -146,6 +149,23 @@ export default function WhoopConnectScreen() {
     await ble.offloadHistory();
     await refreshHistory();
   }, [ble, refreshHistory]);
+
+  const importFromAppleHealth = useCallback(async () => {
+    setAhImporting(true);
+    setAhResult(null);
+    setImportError(null);
+    try {
+      const r = await importAppleHealthHistory(365);
+      setAhResult(
+        `Pulled ${r.cycles} days, ${r.sleeps} nights, and ${r.workouts} workouts from Apple Health.`,
+      );
+      await refreshHistory();
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setAhImporting(false);
+    }
+  }, [refreshHistory]);
 
   const scan = useCallback(async () => {
     setDevices([]);
@@ -355,6 +375,33 @@ export default function WhoopConnectScreen() {
               {importResult.workouts} workouts.
             </Text>
           ) : null}
+
+          <View style={styles.orRow}>
+            <View style={styles.orLine} />
+            <Text style={styles.orText}>or</Text>
+            <View style={styles.orLine} />
+          </View>
+
+          <Text style={styles.historyBlurb}>
+            Already sync WHOOP to Apple Health? Pull that data straight in — no export file
+            needed. Reads HRV, resting heart rate, respiratory rate, sleep, and workouts.
+          </Text>
+          <Pressable
+            style={[styles.btn, styles.btnSecondary]}
+            onPress={importFromAppleHealth}
+            disabled={ahImporting}
+          >
+            {ahImporting ? (
+              <ActivityIndicator color={colors.text} />
+            ) : (
+              <>
+                <Ionicons name="heart-circle" size={16} color={colors.text} />
+                <Text style={styles.btnSecondaryText}>Import from Apple Health</Text>
+              </>
+            )}
+          </Pressable>
+          {ahResult ? <Text style={styles.importOk}>{ahResult}</Text> : null}
+
           {importError ? (
             <View style={styles.errorBox}>
               <Ionicons name="alert-circle" size={16} color={colors.danger} />
@@ -600,6 +647,16 @@ const styles = StyleSheet.create({
   },
   historySince: { color: colors.textDim, fontSize: 12, textAlign: 'center' },
   importOk: { color: colors.positive, fontSize: 13, fontWeight: '600' },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm as unknown as number },
+  orLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  orText: {
+    color: colors.textDim,
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    fontWeight: '700',
+    marginHorizontal: spacing.sm,
+  },
   hintBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
